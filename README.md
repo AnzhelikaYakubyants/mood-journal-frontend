@@ -6,5 +6,5 @@ This repository contains the frontend for the Mood and Emotional Wellness Tracke
 ### Installation
 `npm install`
 
-### Running the server
+### Running
 `npm run dev` 
