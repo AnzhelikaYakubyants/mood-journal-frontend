@@ -21,7 +21,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Do not redirect for login failures, but let the UI handle them.
+    const url = error.config?.url || ''
+    if (error.response?.status === 401 && !url.includes('/login')) {
       // Removes the invalid token.
       localStorage.removeItem('token')
       // Redirects the user to the login (home) page.

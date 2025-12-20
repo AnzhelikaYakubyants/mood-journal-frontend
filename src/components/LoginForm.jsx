@@ -1,4 +1,5 @@
 import { Box, Button, TextField, Typography } from '@mui/material'
+import { useState } from 'react'
 import { Field, Form, Formik } from 'formik'
 import { useNavigate, Link } from 'react-router-dom'
 import * as Yup from 'yup'
@@ -7,6 +8,10 @@ import api from '../axiosConfig'
 function LoginForm() {
   // Navigation helper for redirects.
   const navigate = useNavigate()
+  // Stores email error message returned from the server.
+  const [emailError, setEmailError] = useState('')
+  // Stores password error message returned from the server.
+  const [passwordError, setPasswordError] = useState('')
   // Yup validation schema for form fields.
   const schema = Yup.object({
     email: Yup.string().email('Invalid email').required('Required'),
@@ -36,14 +41,25 @@ function LoginForm() {
             // Redirects user to moods page.
             navigate('/moods')
           }
-          // Catches login errors.
+          // Handles login errors.
         } catch (error) {
-          console.error(error)
+          const msg = error.response?.data?.error || 'Something went wrong'
+          // If the server error indicates that the user does not exist,
+          // shows the message under the Email field.
+          if (msg.toLowerCase().includes('user')) {
+            setEmailError(msg)
+            setPasswordError('')
+          } else {
+            // Otherwise (incorrect password),
+            // shows the message under the Password field.
+            setPasswordError(msg)
+            setEmailError('')
+          }
         }
       }}
     >
-      {/* Accesses Formik render-props (touched and errors) */}
-      {({ touched, errors }) => {
+      {/* Formik render props */}
+      {({ touched, errors, handleChange }) => {
         return (
           <Form>
             <Box
@@ -61,9 +77,21 @@ function LoginForm() {
                 type='email'
                 label='Email'
                 name='email'
-                // Shows error state if the field was touched.
-                error={touched.email && Boolean(errors.email)}
-                helperText={touched.email && errors.email ? errors.email : ' '} // Displays the error message.
+                // Shows error state when an error exists.
+                error={
+                  Boolean(emailError) ||
+                  (touched.email && Boolean(errors.email))
+                }
+                // Displays the error message or reserves space.
+                helperText={
+                  emailError ||
+                  (touched.email && errors.email ? errors.email : ' ')
+                }
+                // Clears the server error message when the user starts typing.
+                onChange={(e) => {
+                  setEmailError('')
+                  handleChange(e)
+                }}
                 // Keeps space under the field so the form does not shift.
                 FormHelperTextProps={{ sx: { minHeight: '20px' } }}
                 // Makes input field white color.
@@ -80,10 +108,18 @@ function LoginForm() {
                 label='Password'
                 type='password' // Hides the typed characters.
                 name='password'
-                error={touched.password && Boolean(errors.password)}
-                helperText={
-                  touched.password && errors.password ? errors.password : ' '
+                error={
+                  Boolean(passwordError) ||
+                  (touched.password && Boolean(errors.password))
                 }
+                helperText={
+                  passwordError ||
+                  (touched.password && errors.password ? errors.password : ' ')
+                }
+                onChange={(e) => {
+                  setPasswordError('')
+                  handleChange(e)
+                }}
                 FormHelperTextProps={{ sx: { minHeight: '20px' } }}
                 sx={{
                   '& .MuiInputBase-root': {
